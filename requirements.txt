@@ -1,0 +1,12 @@
+tgcrypto
+uvloop
+pyrogram
+beautifulsoup4
+html2text
+isort
+imap-tools
+sqlalchemy
+requests
+staty
+pydantic-sqlalchemy
+python-crontab
