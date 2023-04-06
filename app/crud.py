@@ -30,10 +30,6 @@ def create_mailbox(users_db: Session, user: User, mailbox_schema: MailboxCreateS
     return mailbox
 
 
-# def get_user_mailboxes(users_db: Session, user: User) -> list[Mailbox]:
-#     return users_db.query(Mailbox).filter(Mailbox.user_id == user.user_id).all()
-
-
 def get_user_mailboxes(user: User) -> list[Mailbox]:
     return user.mailboxes
 
@@ -90,10 +86,6 @@ def message_exists(mail_db: Session, uid: int) -> bool:
 
 def get_messages_by_sender(mail_db: Session, sender: Sender) -> list[Message]:
     return mail_db.query(Message).filter(Message.sender_id == sender.id).all()
-
-
-# def get_messages_by_order(mail_db: Session, order: Order) -> list[Message]:
-#     return mail_db.query(Message).filter(Message.order_number == order.order_number).all()
 
 
 def get_messages_by_order(order: Order) -> list[Message]:

@@ -24,27 +24,7 @@ app = Client(
     api_hash=API_HASH,
     bot_token=BOT_TOKEN
 )
-    
-# def only_owner_allowed(func):
-#     # Decorator to check if message is from owner
-#     @functools.wraps(func)
-#     async def wrapper(client, message):
-#         if str(message.from_user.id) == BOT_OWNER:
-#             result = await func(client, message)
-#             return result
-#         else:
-#             await message.reply_text("Only owner allowed!")
-#     return wrapper
 
-
-
-# Pyrogram command handler
-# @app.on_message(filters.command("start") & filters.private)
-# @only_owner_allowed
-# async def start(client, message):
-#     await message.reply_text(
-#         f"Hello! I'm your email bot."
-#     )
 
 user_mailbox = None
 
