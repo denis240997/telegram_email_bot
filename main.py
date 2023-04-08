@@ -35,5 +35,5 @@ for handler in handlers:
 
 
 if __name__ == "__main__":
-    app.state = {}
+    app.futures = {}
     app.run()
