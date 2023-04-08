@@ -9,6 +9,7 @@ from app.handlers.mailbox import choose_mailbox
 
 
 async def start(client: Client, message: Message):
+    await client.set_bot_commands(client.commands)
     await message.reply_text(f"Hello! I'm your email bot!")
     with get_users_db() as users_db:
         user = get_or_create_user(users_db, message.from_user.id)
