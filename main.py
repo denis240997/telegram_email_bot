@@ -2,6 +2,7 @@ import os
 
 import uvloop
 from pyrogram import Client
+from pyrogram.types import BotCommand
 
 from app.handlers import start, mailbox, sender
 
@@ -35,8 +36,16 @@ handlers = [
 for handler in handlers:
     app.add_handler(handler)
 
+commands = [
+    BotCommand("start", "Get started"),
+    BotCommand("choose_mailbox", "Choose mailbox"),
+    BotCommand("add_mailbox", "Add new mailbox"),
+    BotCommand("add_sender", "Add sender to mailbox"),
+]
+
 
 if __name__ == "__main__":
     app.mailbox = None
     app.futures = {}
+    app.commands = commands
     app.run()
