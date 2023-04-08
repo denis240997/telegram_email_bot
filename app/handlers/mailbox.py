@@ -2,18 +2,19 @@ import asyncio
 
 from pyrogram import Client, filters
 from pyrogram.types import CallbackQuery, Message, InlineKeyboardMarkup, InlineKeyboardButton
-from pyrogram.handlers import MessageHandler
+from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 
 from app.db import get_users_db
 from app.crud import get_or_create_user, get_user_mailboxes, get_mailbox_by_id, set_user_active_mailbox
 from app.models import Mailbox, MailboxSchema
-from app.handlers.setup import user_mailbox
+from app.handlers.state import user_mailbox
 
 
 user_choice_futures = {}
 
 
 def generate_mailbox_keyboard(mailbox_list: list[Mailbox]) -> InlineKeyboardMarkup:
+    print("generate_mailbox_keyboard")
     keyboard = []
     for mailbox in mailbox_list:
         keyboard.append([InlineKeyboardButton(mailbox.email, callback_data=f'mailbox_{mailbox.mailbox_id}')])
@@ -22,6 +23,7 @@ def generate_mailbox_keyboard(mailbox_list: list[Mailbox]) -> InlineKeyboardMark
 
 
 async def choose_mailbox(client: Client, message: Message) -> MailboxSchema or None:
+    print("choose_mailbox")
     user_choice = asyncio.Future()
     with get_users_db() as users_db:
         user = get_or_create_user(users_db, message.from_user.id)
@@ -40,22 +42,22 @@ choose_mailbox_handler = MessageHandler(choose_mailbox, filters.command("choose_
 
 
 async def process_mailbox_choice(client: Client, callback_query: CallbackQuery) -> MailboxSchema:
-    global user_mailbox
+    print("process_mailbox_choice")
     mailbox_id = int(callback_query.data.split('_')[1])
     with get_users_db() as users_db:
         mailbox = get_mailbox_by_id(users_db, mailbox_id).to_dict()
-        user_mailbox.data = MailboxSchema(**mailbox)
+        user_mailbox.set(MailboxSchema(**mailbox))
         user = get_or_create_user(users_db, callback_query.from_user.id)
         set_user_active_mailbox(users_db, user, mailbox_id)
 
     message_id = callback_query.message.id
-    user_choice_futures[message_id].set_result(user_mailbox.data)
+    user_choice_futures[message_id].set_result(user_mailbox.get())
     del user_choice_futures[message_id]
 
-    await callback_query.answer(f'You have chosen {user_mailbox.data.email}')    # top panel alert
-    await callback_query.message.edit_text(f'You have chosen {user_mailbox.data.email}')
+    await callback_query.answer(f'You have chosen {user_mailbox.get().email}')    # top panel alert
+    await callback_query.message.edit_text(f'You have chosen {user_mailbox.get().email}')
 
-    return user_mailbox.data
+    return user_mailbox.get()
 
 
-process_mailbox_choice_handler = MessageHandler(process_mailbox_choice, filters.regex('^mailbox_') & filters.private)
+process_mailbox_choice_handler = CallbackQueryHandler(process_mailbox_choice, filters.regex('^mailbox_'))

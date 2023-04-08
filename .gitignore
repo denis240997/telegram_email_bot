@@ -167,5 +167,6 @@ cython_debug/
 cron/
 old_stuff/
 *.session
+*.session-journal
 *.sqlite
 settings.txt

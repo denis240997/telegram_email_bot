@@ -32,5 +32,4 @@ for handler in handlers:
 
 
 if __name__ == "__main__":
-    app.user_choice_futures = {}
     app.run()

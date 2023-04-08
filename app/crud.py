@@ -49,6 +49,10 @@ def set_user_active_mailbox(users_db: Session, user: User, mailbox_id: int) -> U
     return user
 
 
+def get_user_active_mailbox(users_db: Session, user: User) -> Mailbox:
+    return get_mailbox_by_id(users_db, user.active_mailbox_id)
+
+
 def create_sender(mail_db: Session, sender_schema: SenderCreateSchema) -> Sender:
     sender = Sender(**sender_schema.dict())
     mail_db.add(sender)
