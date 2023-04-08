@@ -63,22 +63,21 @@ async def process_mailbox_choice(client: Client, callback_query: CallbackQuery) 
 process_mailbox_choice_handler = CallbackQueryHandler(process_mailbox_choice, filters.regex('^mailbox_'))
 
 
+async def field_request(client: Client, message: Message, field_name: str, prompt: str):
+    user_input = asyncio.Future()
+    client.state[f'awaiting_{field_name}'] = True
+    await message.reply_text(prompt)
+    user_futures[f'awaiting_{field_name}'] = user_input
+    field = await user_input
+    print(f"{field_name.upper()}: {field}")
+
+    return field
+
+
 async def create_mailbox(client: Client, message: Message):
     print("create_mailbox")
-
-    user_input = asyncio.Future()
-    client.state['awaiting_email'] = True
-    await message.reply_text("Enter your email address:")
-    user_futures['awaiting_email'] = user_input
-    email = await user_input
-    print(f"EMAIL: {email}")
-
-    user_input = asyncio.Future()
-    client.state['awaiting_password'] = True
-    await message.reply_text("Enter your password:")
-    user_futures['awaiting_password'] = user_input
-    password = await user_input
-    print(f"PASSWORD: {password}")
+    email = await field_request(client, message, 'email', "Enter your email address:")
+    password = await field_request(client, message, 'password', "Enter your password:")
 
 
 create_mailbox_handler = MessageHandler(create_mailbox, filters.command("add_mailbox") & filters.private)
@@ -91,21 +90,16 @@ def awaiting_field_filter(field_name: str) -> filters.Filter:
     return filters.create(func, field_name=field_name)
 
 
-async def process_email(client: Client, message: Message):
-    print("process_email")
-    del client.state['awaiting_email']
-    user_futures['awaiting_email'].set_result(message.text)
-    del user_futures['awaiting_email']
+def get_field_handler(field_name: str) -> MessageHandler:
+
+    async def func(client: Client, message: Message):
+        print(f"process_{field_name}")
+        del client.state[f'awaiting_{field_name}']
+        user_futures[f'awaiting_{field_name}'].set_result(message.text)
+        del user_futures[f'awaiting_{field_name}']
+
+    return MessageHandler(func, awaiting_field_filter(field_name))
 
 
-process_email_handler = MessageHandler(process_email, awaiting_field_filter('email'))
-
-
-async def process_password(client: Client, message: Message):
-    print("process_password")
-    del client.state['awaiting_password']
-    user_futures['awaiting_password'].set_result(message.text)
-    del user_futures['awaiting_password']
-
-
-process_password_handler = MessageHandler(process_password, awaiting_field_filter('password'))
+process_email_handler = get_field_handler('email')
+process_password_handler = get_field_handler('password')
