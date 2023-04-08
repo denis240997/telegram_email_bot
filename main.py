@@ -25,6 +25,9 @@ handlers = [
     start.start_handler,
     mailbox.choose_mailbox_handler,
     mailbox.process_mailbox_choice_handler,
+    mailbox.create_mailbox_handler,
+    mailbox.process_email_handler,
+    mailbox.process_password_handler,
 ]
 
 for handler in handlers:
@@ -32,4 +35,5 @@ for handler in handlers:
 
 
 if __name__ == "__main__":
+    app.state = {}
     app.run()
