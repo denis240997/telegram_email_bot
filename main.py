@@ -3,7 +3,7 @@ import os
 import uvloop
 from pyrogram import Client
 
-from app.handlers import start, mailbox
+from app.handlers import start, mailbox, sender
 
 
 # Pyrogram Client credentials
@@ -28,6 +28,8 @@ handlers = [
     mailbox.create_mailbox_handler,
     mailbox.process_email_handler,
     mailbox.process_password_handler,
+    sender.add_sender_handler,
+    sender.process_sender_email_handler,
 ]
 
 for handler in handlers:
