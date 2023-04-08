@@ -66,6 +66,7 @@ MailboxCreateSchema = sqlalchemy_to_pydantic(Mailbox, exclude=["mailbox_id", "us
 MessageCreateSchema = sqlalchemy_to_pydantic(Message)
 SenderCreateSchema = sqlalchemy_to_pydantic(Sender, exclude=["sender_id", "messages"])
 
+# Class to store user's mailbox data after closing the connection to users_db
 class MailboxSchema(sqlalchemy_to_pydantic(Mailbox)):
     
     class Config:
