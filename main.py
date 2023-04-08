@@ -35,5 +35,6 @@ for handler in handlers:
 
 
 if __name__ == "__main__":
+    app.mailbox = None
     app.futures = {}
     app.run()
