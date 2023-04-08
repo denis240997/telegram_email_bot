@@ -5,8 +5,8 @@ from pyrogram.types import CallbackQuery, Message, InlineKeyboardMarkup, InlineK
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 
 from app.db import get_users_db
-from app.crud import get_or_create_user, get_user_mailboxes, get_mailbox_by_id, set_user_active_mailbox
-from app.models import Mailbox, MailboxSchema
+from app.crud import get_or_create_user, get_user_mailboxes, get_mailbox_by_id, set_user_active_mailbox, create_mailbox
+from app.models import Mailbox, MailboxSchema, MailboxCreateSchema
 from app.handlers.state import user_mailbox
 
 
@@ -74,13 +74,26 @@ async def field_request(client: Client, message: Message, field_name: str, promp
     return field
 
 
-async def create_mailbox(client: Client, message: Message):
-    print("create_mailbox")
+async def add_mailbox(client: Client, message: Message):
+    print("add_mailbox")
     email = await field_request(client, message, 'email', "Enter your email address:")
     password = await field_request(client, message, 'password', "Enter your password:")
 
+    new_mailbox = MailboxCreateSchema(
+        email=email,
+        password=password
+    )
 
-create_mailbox_handler = MessageHandler(create_mailbox, filters.command("add_mailbox") & filters.private)
+    with get_users_db() as users_db:
+        user = get_or_create_user(users_db, message.from_user.id)
+        mailbox = create_mailbox(users_db, user, new_mailbox).to_dict()
+        user_mailbox.set(MailboxSchema(**mailbox))
+        set_user_active_mailbox(users_db, user, user_mailbox.get().mailbox_id)
+
+    await message.reply_text(f'You have added {user_mailbox.get().email} as your mailbox.')
+
+
+create_mailbox_handler = MessageHandler(add_mailbox, filters.command("add_mailbox") & filters.private)
 
 
 def awaiting_field_filter(field_name: str) -> filters.Filter:
