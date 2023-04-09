@@ -9,6 +9,17 @@ from app.crud import create_message, get_or_create_sender, message_exists
 from app.models import Message, MessageCreateSchema, SenderCreateSchema, MailboxSchema
 
 
+def get_imap_server_by_email(email: str) -> str or None:
+    imap_servers_table = {
+        "gmail.com": "imap.gmail.com",
+        "yandex.ru": "imap.yandex.ru",
+        "mail.ru": "imap.mail.ru",
+        "outlook.com": "imap-mail.outlook.com",
+    }
+    domain = email.split("@")[1]
+    return imap_servers_table.get(domain, None)
+
+
 @contextmanager
 def get_mailbox(mailbox: MailboxSchema) -> MailBox:
     mb = MailBox(mailbox.imap_server_url, mailbox.imap_port)

@@ -21,6 +21,7 @@ from app.crud import (
 from app.db import get_users_db
 from app.handlers.utils import field_request, get_field_handler
 from app.models import Mailbox, MailboxCreateSchema, MailboxSchema
+from app.mailing_tools import get_imap_server_by_email
 
 
 METHOD_CHOOSE = "choose"
@@ -110,7 +111,9 @@ async def add_mailbox(client: Client, message: Message):
     print("add_mailbox")
     email = await field_request(client, message, "email", "Enter your email address:")
     password = await field_request(client, message, "password", "Enter your password:")
-    imap_server_url = await field_request(client, message, "imap_server_url", "Enter your IMAP server URL:")
+    imap_server_url = get_imap_server_by_email(email)
+    if not imap_server_url:
+        imap_server_url = await field_request(client, message, "imap_server_url", "Enter your IMAP server URL:")
 
     new_mailbox = MailboxCreateSchema(email=email, password=password, imap_server_url=imap_server_url)
 
