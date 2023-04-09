@@ -49,7 +49,7 @@ class Message(MailboxBase):
     uid = Column(Integer, primary_key=True)
     sender_id = Column(Integer, ForeignKey("sender.sender_id"))
     subject = Column(String, nullable=True)
-    content = Column(Text)
+    content = Column(Text, nullable=True)
     date = Column(DateTime)
     order_number = Column(String, ForeignKey("order.order_number"), nullable=True)
 

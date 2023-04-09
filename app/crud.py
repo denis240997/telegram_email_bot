@@ -39,6 +39,12 @@ def create_mailbox(users_db: Session, user: User, mailbox_schema: MailboxCreateS
     return mailbox
 
 
+def delete_mailbox_by_id(users_db: Session, mailbox_id: int) -> None:
+    mailbox = users_db.query(Mailbox).filter(Mailbox.mailbox_id == mailbox_id).one()
+    users_db.delete(mailbox)
+    users_db.commit()
+
+
 def get_user_mailboxes(user: User) -> list[Mailbox]:
     return user.mailboxes
 

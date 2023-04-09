@@ -6,13 +6,13 @@ from imap_tools import A, MailBox, MailMessage
 from sqlalchemy.orm.session import Session
 
 from app.crud import create_message, get_or_create_sender, message_exists
-from app.models import Message, MessageCreateSchema, SenderCreateSchema
+from app.models import Message, MessageCreateSchema, SenderCreateSchema, MailboxSchema
 
 
 @contextmanager
-def get_mailbox(imap_server_url: str, imap_port: int, email: str, password: str, mail_folder: str) -> MailBox:
-    mb = MailBox(imap_server_url, imap_port)
-    mb.login(email, password, mail_folder)
+def get_mailbox(mailbox: MailboxSchema) -> MailBox:
+    mb = MailBox(mailbox.imap_server_url, mailbox.imap_port)
+    mb.login(mailbox.email, mailbox.password, mailbox.mail_folder)
     try:
         yield mb
     finally:
@@ -25,6 +25,14 @@ def get_unseen_messages(mb: MailBox) -> list[MailMessage]:
 
 def get_messages_since_date(mb: MailBox, date: date) -> list[MailMessage]:
     return mb.fetch(A(date_gte=date), mark_seen=False, reverse=True)
+
+
+def get_message_from_sender(mb: MailBox, sender_email: str) -> list[MailMessage]:
+    return mb.fetch(A(from_=sender_email), mark_seen=False, reverse=True)
+
+
+def get_message_from_sender_since_date(mb: MailBox, sender_email: str, date: date) -> list[MailMessage]:
+    return mb.fetch(A(from_=sender_email, date_gte=date), mark_seen=False, reverse=True)
 
 
 def parse_message(mail_db: Session, msg: MailMessage) -> Message:
