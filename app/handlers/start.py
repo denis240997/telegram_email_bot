@@ -1,16 +1,16 @@
 from pyrogram import Client, filters
-from pyrogram.types import Message
 from pyrogram.handlers import MessageHandler
+from pyrogram.types import Message
 
-from app.db import get_users_db
 from app.crud import get_or_create_user, get_user_active_mailbox
-from app.models import MailboxSchema
+from app.db import get_users_db
 from app.handlers.mailbox import choose_mailbox
+from app.models import MailboxSchema
 
 
 async def start(client: Client, message: Message):
     await client.set_bot_commands(client.commands)
-    await message.reply_text(f"Hello! I'm your email bot!")
+    await message.reply_text("Hello! I'm your email bot!")
     await client.set_bot_commands(client.commands)
     with get_users_db() as users_db:
         user = get_or_create_user(users_db, message.from_user.id)

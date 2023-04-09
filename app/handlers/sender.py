@@ -1,12 +1,11 @@
 from pyrogram import Client, filters
-from pyrogram.types import Message
 from pyrogram.handlers import MessageHandler
+from pyrogram.types import Message
 
-from app.db import get_mail_db
 from app.crud import get_or_create_sender
-from app.models import SenderCreateSchema
+from app.db import get_mail_db
 from app.handlers.utils import field_request, get_field_handler
-
+from app.models import SenderCreateSchema
 
 
 async def add_sender(client: Client, message: Message):

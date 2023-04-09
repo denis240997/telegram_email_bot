@@ -1,9 +1,7 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Text
-from sqlalchemy.orm import backref, declarative_base, relationship
-from pydantic_sqlalchemy import sqlalchemy_to_pydantic
 from pydantic import Extra
-
-
+from pydantic_sqlalchemy import sqlalchemy_to_pydantic
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import backref, declarative_base, relationship
 
 UsersBase = declarative_base()
 MailboxBase = declarative_base()
@@ -66,9 +64,9 @@ MailboxCreateSchema = sqlalchemy_to_pydantic(Mailbox, exclude=["mailbox_id", "us
 MessageCreateSchema = sqlalchemy_to_pydantic(Message)
 SenderCreateSchema = sqlalchemy_to_pydantic(Sender, exclude=["sender_id", "messages"])
 
+
 # Class to store user's mailbox data after closing the connection to users_db
 class MailboxSchema(sqlalchemy_to_pydantic(Mailbox)):
-    
     class Config:
         extra = Extra.ignore
 

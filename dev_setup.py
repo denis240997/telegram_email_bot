@@ -1,11 +1,22 @@
 import os
 from datetime import date
 
-from app.db import get_users_db, get_mail_db
-from app.crud import get_user_by_id, get_mailbox_by_email, create_message, get_messages_by_sender, get_or_create_user, get_user_mailboxes, create_mailbox
-from app.models import MailboxCreateSchema, SenderCreateSchema, MailboxSchema
-from app.mailing_tools import get_mailbox, process_unseen_messages, process_messages_since_date
-
+from app.crud import (
+    create_mailbox,
+    create_message,
+    get_mailbox_by_email,
+    get_messages_by_sender,
+    get_or_create_user,
+    get_user_by_id,
+    get_user_mailboxes,
+)
+from app.db import get_mail_db, get_users_db
+from app.mailing_tools import (
+    get_mailbox,
+    process_messages_since_date,
+    process_unseen_messages,
+)
+from app.models import MailboxCreateSchema, MailboxSchema, SenderCreateSchema
 
 CHAT_ID = os.getenv('CHAT_ID')
 USER_EMAIL = os.getenv('USER_EMAIL')

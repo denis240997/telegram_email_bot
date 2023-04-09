@@ -1,12 +1,12 @@
-from datetime import date
 from contextlib import contextmanager
+from datetime import date
 
 # https://github.com/ikvk/imap_tools
-from imap_tools import MailBox, MailMessage, A
+from imap_tools import A, MailBox, MailMessage
 from sqlalchemy.orm.session import Session
 
-from app.models import Message, Sender, SenderCreateSchema, MessageCreateSchema
-from app.crud import get_or_create_sender, create_message, get_message_by_uid, message_exists
+from app.crud import create_message, get_or_create_sender, message_exists
+from app.models import Message, MessageCreateSchema, SenderCreateSchema
 
 
 @contextmanager
@@ -16,7 +16,7 @@ def get_mailbox(imap_server_url: str, imap_port: int, email: str, password: str,
     try:
         yield mb
     finally:
-        mb.logout() 
+        mb.logout()
 
 
 def get_unseen_messages(mb: MailBox) -> list[MailMessage]:
@@ -24,7 +24,7 @@ def get_unseen_messages(mb: MailBox) -> list[MailMessage]:
 
 
 def get_messages_since_date(mb: MailBox, date: date) -> list[MailMessage]:
-    return mb.fetch(A(date_gte = date), mark_seen=False, reverse=True)
+    return mb.fetch(A(date_gte=date), mark_seen=False, reverse=True)
 
 
 def parse_message(mail_db: Session, msg: MailMessage) -> Message:
@@ -32,12 +32,8 @@ def parse_message(mail_db: Session, msg: MailMessage) -> Message:
     #     return get_message_by_uid(mail_db, msg.uid)
     sender_schema = SenderCreateSchema(email=msg.from_values.email, name=msg.from_values.name)
     sender = get_or_create_sender(mail_db, sender_schema)
-    message_schema =  MessageCreateSchema(
-        uid=msg.uid,
-        sender_id=sender.sender_id,
-        subject=msg.subject,
-        content=msg.text or msg.html,
-        date=msg.date
+    message_schema = MessageCreateSchema(
+        uid=msg.uid, sender_id=sender.sender_id, subject=msg.subject, content=msg.text or msg.html, date=msg.date
     )
     message = create_message(mail_db, message_schema)
     return message

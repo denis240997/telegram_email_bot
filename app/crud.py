@@ -1,6 +1,15 @@
-from app.models import User, Mailbox, Sender, Message, Order
 from sqlalchemy.orm import Session
-from app.models import MailboxCreateSchema, SenderCreateSchema, MessageCreateSchema
+
+from app.models import (
+    Mailbox,
+    MailboxCreateSchema,
+    Message,
+    MessageCreateSchema,
+    Order,
+    Sender,
+    SenderCreateSchema,
+    User,
+)
 
 
 def create_user(users_db: Session, user_id: int) -> User:

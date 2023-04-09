@@ -5,8 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
 
-from app.models import Mailbox, UsersBase, MailboxBase, MailboxSchema
-
+from app.models import MailboxBase, MailboxSchema, UsersBase
 
 ECHO_DB_ACTIONS = os.getenv("ECHO_DB_ACTIONS", False)
 
@@ -24,9 +23,9 @@ def get_users_db() -> Session:
     try:
         yield session
         session.commit()
-    except:
+    except BaseException as error:
         session.rollback()
-        raise
+        raise error
     finally:
         session.close()
 
@@ -44,8 +43,8 @@ def get_mail_db(mailbox: MailboxSchema) -> Session:
     try:
         yield session
         session.commit()
-    except:
+    except BaseException as error:
         session.rollback()
-        raise
+        raise error
     finally:
         session.close()

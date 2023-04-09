@@ -1,0 +1,13 @@
+######################
+Linting and Code style
+######################
+
+python -m flake8 ./app/ --config ./setup.cfg
+
+python -m black ./app/ --config ./pyproject.toml --check
+python -m black ./app/ --config ./pyproject.toml --diff --color
+python -m black ./app/ --config ./pyproject.toml
+
+python -m isort ./ --check-only
+python -m isort ./ --diff --color
+python -m isort ./

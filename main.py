@@ -4,8 +4,7 @@ import uvloop
 from pyrogram import Client
 from pyrogram.types import BotCommand
 
-from app.handlers import start, mailbox, sender
-
+from app.handlers import mailbox, sender, start
 
 # Pyrogram Client credentials
 API_ID = os.environ.get("API_ID")
