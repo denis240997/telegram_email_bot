@@ -170,3 +170,5 @@ old_stuff/
 *.session-journal
 *.sqlite
 settings.txt
+dev_script.sh
+dev_setup.py
