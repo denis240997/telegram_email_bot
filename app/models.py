@@ -31,6 +31,7 @@ class Mailbox(UsersBase):
     imap_server_url = Column(String, default="imap.yandex.ru")
     imap_port = Column(Integer, default=993)
     mail_folder = Column(String, default="INBOX")
+    last_update = Column(DateTime, nullable=True)
 
     def to_dict(self):
         return {column.name: getattr(self, column.name) for column in self.__table__.columns}
@@ -57,7 +58,20 @@ class Message(MailboxBase):
 class Order(MailboxBase):
     __tablename__ = "order"
     order_number = Column(String, primary_key=True)
+    cdek_number = Column(String, nullable=True)
+    customer_phone = Column(String, nullable=True)
+    delivery_city = Column(String, nullable=True)
+    items = relationship("Item", backref=backref("order"))
     messages = relationship("Message", backref=backref("order"))
+
+
+class Item(MailboxBase):
+    __tablename__ = "item"
+    item_id = Column(Integer, primary_key=True, autoincrement=True)
+    order_number = Column(String, ForeignKey("order.order_number"))
+    name = Column(String)
+    quantity = Column(Integer)
+    price = Column(Integer)
 
 
 MailboxCreateSchema = sqlalchemy_to_pydantic(Mailbox, exclude=["mailbox_id", "user_id"])

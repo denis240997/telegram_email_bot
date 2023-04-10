@@ -99,6 +99,13 @@ def get_message_by_uid(mail_db: Session, uid: int) -> Message:
     return mail_db.query(Message).filter(Message.uid == uid).first()
 
 
+def get_or_create_message(mail_db: Session, message: MessageCreateSchema) -> Message:
+    message = get_message_by_uid(mail_db, message.uid)
+    if not message:
+        message = create_message(mail_db, message)
+    return message
+
+
 def message_exists(mail_db: Session, uid: int) -> bool:
     return mail_db.query(Message).filter(Message.uid == uid).first() is not None
 

@@ -14,15 +14,14 @@ from app.crud import (
     delete_mailbox_by_id,
     get_mailbox_by_id,
     get_or_create_user,
+    get_user_active_mailbox,
     get_user_mailboxes,
     set_user_active_mailbox,
-    get_user_active_mailbox
 )
 from app.db import get_users_db
 from app.handlers.utils import field_request, get_field_handler
-from app.models import Mailbox, MailboxCreateSchema, MailboxSchema
 from app.mailing_tools import get_imap_server_by_email
-
+from app.models import Mailbox, MailboxCreateSchema, MailboxSchema
 
 METHOD_CHOOSE = "choose"
 METHOD_UPDATE = "update"
@@ -93,7 +92,7 @@ async def process_mailbox_choice(client: Client, callback_query: CallbackQuery):
 
             await callback_query.answer(f"You have chosen {client.user_mailbox.email}")
             await callback_query.message.edit_text(f"You have chosen {client.user_mailbox.email}")
-        
+
         elif method == METHOD_DELETE:
             if get_user_active_mailbox(users_db, user).mailbox_id == mailbox_id:
                 client.user_mailbox = None
