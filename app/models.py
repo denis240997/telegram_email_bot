@@ -1,6 +1,6 @@
 from pydantic import Extra
 from pydantic_sqlalchemy import sqlalchemy_to_pydantic
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, Table
 from sqlalchemy.orm import backref, declarative_base, relationship
 
 UsersBase = declarative_base()
@@ -55,23 +55,35 @@ class Message(MailboxBase):
     order_number = Column(String, ForeignKey("order.order_number"), nullable=True)
 
 
+order_item = Table(
+    "order_item",
+    MailboxBase.metadata,
+    Column("order_number", String, ForeignKey("order.order_number")),
+    Column("item_code", String, ForeignKey("item.item_code")),
+    Column("quantity", Integer, default=1),
+)
+
 class Order(MailboxBase):
     __tablename__ = "order"
     order_number = Column(String, primary_key=True)
     cdek_number = Column(String, nullable=True)
     customer_phone = Column(String, nullable=True)
     delivery_city = Column(String, nullable=True)
-    items = relationship("Item", backref=backref("order"))
     messages = relationship("Message", backref=backref("order"))
+    items = relationship(
+        "Item", secondary=order_item, back_populates="orders"
+    )
 
 
 class Item(MailboxBase):
     __tablename__ = "item"
-    item_id = Column(Integer, primary_key=True, autoincrement=True)
-    order_number = Column(String, ForeignKey("order.order_number"))
+    item_code = Column(String, primary_key=True)
     name = Column(String)
-    quantity = Column(Integer)
+    size = Column(String)
     price = Column(Integer)
+    orders = relationship(
+        "Order", secondary=order_item, back_populates="items"
+    )
 
 
 MailboxCreateSchema = sqlalchemy_to_pydantic(Mailbox, exclude=["mailbox_id", "user_id"])
