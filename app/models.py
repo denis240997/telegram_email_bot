@@ -1,6 +1,8 @@
+from enum import Enum as PyEnum
+
 from pydantic import Extra
 from pydantic_sqlalchemy import sqlalchemy_to_pydantic
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, Table
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, Table, Enum
 from sqlalchemy.orm import backref, declarative_base, relationship
 
 UsersBase = declarative_base()
@@ -45,9 +47,16 @@ class Sender(MailboxBase):
     messages = relationship("Message", backref=backref("sender"))
 
 
+class MessageStatus(PyEnum):
+    UNPROCESSED = "unprocessed"
+    PROCESSED = "processed"
+    FAILED_TO_PROCESS = "failed_to_process"
+
+
 class Message(MailboxBase):
     __tablename__ = "message"
     uid = Column(Integer, primary_key=True)
+    status = Column(Enum(MessageStatus), default=MessageStatus.UNPROCESSED)
     sender_id = Column(Integer, ForeignKey("sender.sender_id"))
     subject = Column(String, nullable=True)
     content = Column(Text, nullable=True)
@@ -59,14 +68,22 @@ order_item = Table(
     "order_item",
     MailboxBase.metadata,
     Column("order_number", String, ForeignKey("order.order_number")),
-    Column("item_code", String, ForeignKey("item.item_code")),
+    Column("sku", String, ForeignKey("item.sku")),
     Column("quantity", Integer, default=1),
 )
+
+class OrderStatus(PyEnum):
+    CREATED = "created"
+    ACCEPTED_TO_DELIVERY = "accepted_to_delivery"
+    DELIVERED = "delivered"
+    CANCELED = "canceled"
+
 
 class Order(MailboxBase):
     __tablename__ = "order"
     order_number = Column(String, primary_key=True)
     cdek_number = Column(String, nullable=True)
+    status = Column(Enum(OrderStatus), default=OrderStatus.CREATED)
     customer_phone = Column(String, nullable=True)
     delivery_city = Column(String, nullable=True)
     messages = relationship("Message", backref=backref("order"))
@@ -77,7 +94,7 @@ class Order(MailboxBase):
 
 class Item(MailboxBase):
     __tablename__ = "item"
-    item_code = Column(String, primary_key=True)
+    sku = Column(String, primary_key=True)
     name = Column(String)
     size = Column(String)
     price = Column(Integer)
@@ -89,6 +106,8 @@ class Item(MailboxBase):
 MailboxCreateSchema = sqlalchemy_to_pydantic(Mailbox, exclude=["mailbox_id", "user_id"])
 MessageCreateSchema = sqlalchemy_to_pydantic(Message)
 SenderCreateSchema = sqlalchemy_to_pydantic(Sender, exclude=["sender_id", "messages"])
+OrderCreateSchema = sqlalchemy_to_pydantic(Order, exclude=["messages", "items"])
+ItemCreateSchema = sqlalchemy_to_pydantic(Item, exclude=["orders"])
 
 
 # Class to store user's mailbox data after closing the connection to users_db

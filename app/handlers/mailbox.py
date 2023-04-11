@@ -1,4 +1,5 @@
 import asyncio
+from enum import Enum as PyEnum
 
 from pyrogram import Client, filters
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
@@ -23,9 +24,11 @@ from app.handlers.utils import field_request, get_field_handler
 from app.mailing_tools import get_imap_server_by_email
 from app.models import Mailbox, MailboxCreateSchema, MailboxSchema
 
-METHOD_CHOOSE = "choose"
-METHOD_UPDATE = "update"
-METHOD_DELETE = "delete"
+
+class MailboxKeyboardMethods(PyEnum):
+    CHOOSE = "choose"
+    UPDATE = "update"
+    DELETE = "delete"
 
 
 def generate_mailbox_keyboard(mailbox_list: list[Mailbox], method: str) -> InlineKeyboardMarkup:
@@ -45,7 +48,7 @@ async def choose_mailbox(client: Client, message: Message) -> MailboxSchema or N
         mailbox_list = get_user_mailboxes(user)
         if mailbox_list:
             sent_message = await message.reply_text(
-                "Choose a mailbox:", reply_markup=generate_mailbox_keyboard(mailbox_list, METHOD_CHOOSE)
+                "Choose a mailbox:", reply_markup=generate_mailbox_keyboard(mailbox_list, MailboxKeyboardMethods.CHOOSE)
             )
             client.futures[sent_message.id] = user_choice
             chosen_mailbox = await user_choice
@@ -65,7 +68,7 @@ async def remove_mailbox(client: Client, message: Message):
         mailbox_list = get_user_mailboxes(user)
         if mailbox_list:
             await message.reply_text(
-                "Choose a mailbox to remove:", reply_markup=generate_mailbox_keyboard(mailbox_list, METHOD_DELETE)
+                "Choose a mailbox to remove:", reply_markup=generate_mailbox_keyboard(mailbox_list, MailboxKeyboardMethods.DELETE)
             )
         else:
             await message.reply_text("You don't have any mailboxes yet. Type /add_mailbox command to add one.")
@@ -82,7 +85,7 @@ async def process_mailbox_choice(client: Client, callback_query: CallbackQuery):
         user = get_or_create_user(users_db, callback_query.from_user.id)
         mailbox = get_mailbox_by_id(users_db, mailbox_id)
         selected_mailbox = MailboxSchema(**mailbox.to_dict())
-        if method == METHOD_CHOOSE:
+        if method == MailboxKeyboardMethods.CHOOSE:
             client.user_mailbox = selected_mailbox
             set_user_active_mailbox(users_db, user, mailbox_id)
 
@@ -93,7 +96,7 @@ async def process_mailbox_choice(client: Client, callback_query: CallbackQuery):
             await callback_query.answer(f"You have chosen {client.user_mailbox.email}")
             await callback_query.message.edit_text(f"You have chosen {client.user_mailbox.email}")
 
-        elif method == METHOD_DELETE:
+        elif method == MailboxKeyboardMethods.DELETE:
             if get_user_active_mailbox(users_db, user).mailbox_id == mailbox_id:
                 client.user_mailbox = None
                 set_user_active_mailbox(users_db, user, None)
