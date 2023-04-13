@@ -10,3 +10,4 @@ requests
 staty
 pydantic-sqlalchemy
 python-crontab
+apscheduler

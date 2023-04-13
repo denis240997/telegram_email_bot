@@ -1,10 +1,12 @@
 import os
 
 import uvloop
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from pyrogram import Client
 from pyrogram.types import BotCommand
 
-from app.handlers import mailbox, sender, start, test
+from app.handlers import mailbox, sender, start, mail_tasks, test
+
 
 # Pyrogram Client credentials
 API_ID = os.environ.get("API_ID")
@@ -33,6 +35,8 @@ handlers = [
     sender.add_sender_handler,
     sender.process_sender_email_handler,
     test.test_handler,
+    mail_tasks.schedule_email_update_handler,
+    mail_tasks.remove_scheduled_email_update_handler,
 ]
 
 for handler in handlers:
@@ -44,10 +48,16 @@ commands = [
     BotCommand("choose_mailbox", "Choose mailbox"),
     BotCommand("remove_mailbox", "Remove mailbox"),
     BotCommand("add_sender", "Add sender to mailbox"),
+    
+    BotCommand("test", "Test"),
+    BotCommand("schedule_email_update", "Schedule email update"),
+    BotCommand("remove_scheduled_email_update", "Remove scheduled email update"),
 ]
 
 
 if __name__ == "__main__":
+    app.scheduler = AsyncIOScheduler()
+    app.scheduler.start()
     app.user_mailbox = None
     app.futures = {}
     app.commands = commands
