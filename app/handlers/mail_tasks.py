@@ -7,10 +7,12 @@ from pyrogram.types import Message
 from app.crud import update_mailbox
 from app.db import get_mail_db, get_users_db
 from app.mailing_tools import gather_messages_since_date, get_mailbox
+from app.handlers.decorators import handle_mailbox_not_exists
 
 LAST_UPDATE_DEFAULT = date(2023, 3, 20)
 
 
+@handle_mailbox_not_exists
 def update_email(client: Client):
     print("update_email")
     mailbox = client.user_mailbox

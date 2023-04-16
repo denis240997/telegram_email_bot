@@ -134,3 +134,14 @@ create_mailbox_handler = MessageHandler(add_mailbox, filters.command("add_mailbo
 process_email_handler = get_field_handler("email")
 process_password_handler = get_field_handler("password")
 process_imap_server_handler = get_field_handler("imap_server_url")
+
+
+async def set_user_mailbox(client: Client, message: Message):
+    with get_users_db() as users_db:
+        user = get_or_create_user(users_db, message.from_user.id)
+        if user.active_mailbox_id:
+            mailbox = get_user_active_mailbox(users_db, user).to_dict()
+            client.user_mailbox = MailboxSchema(**mailbox)
+            await message.reply_text(f"Your active mailbox is {client.user_mailbox.email}")
+        else:
+            client.user_mailbox = await choose_mailbox(client, message)

@@ -6,6 +6,7 @@ from sqlalchemy import event
 
 from app.models import Order, OrderStatus, Item
 from app.crud import get_order_items
+from app.handlers.decorators import handle_mailbox_not_exists
 
 
 def stringify_item(item: Item, amount: int) -> str:
@@ -21,6 +22,7 @@ def stringify_order(order: Order) -> str:
     return order_repr
 
 
+@handle_mailbox_not_exists
 def register_notifications(client: Client) -> None:
     loop = asyncio.get_event_loop()
 
