@@ -4,10 +4,9 @@ from pyrogram import Client, filters
 from pyrogram.handlers import MessageHandler
 from pyrogram.types import Message
 
-from app.db import get_users_db, get_mail_db
 from app.crud import update_mailbox
-from app.mailing_tools import get_mailbox, gather_messages_since_date
-
+from app.db import get_mail_db, get_users_db
+from app.mailing_tools import gather_messages_since_date, get_mailbox
 
 LAST_UPDATE_DEFAULT = date(2023, 3, 20)
 

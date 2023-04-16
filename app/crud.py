@@ -1,17 +1,18 @@
 from sqlalchemy.orm import Session
 
 from app.models import (
+    Item,
+    ItemCreateSchema,
     Mailbox,
     MailboxCreateSchema,
     Message,
     MessageCreateSchema,
+    MessageStatus,
     Order,
     OrderCreateSchema,
     Sender,
     SenderCreateSchema,
     User,
-    Item,
-    ItemCreateSchema,
 )
 
 
@@ -128,6 +129,26 @@ def get_messages_by_sender(mail_db: Session, sender: Sender) -> list[Message]:
     return mail_db.query(Message).filter(Message.sender_id == sender.id).all()
 
 
+# Get messages by sender with certain MessageStatus
+def get_messages_by_sender_with_status(mail_db: Session, sender: Sender, status: MessageStatus) -> list[Message]:
+    return mail_db.query(Message).filter(Message.sender_id == sender.sender_id, Message.status == status).all()
+
+
+def mark_message_processed(mail_db: Session, message: Message) -> Message:
+    message.status = MessageStatus.PROCESSED
+    message.content = None
+    mail_db.commit()
+    mail_db.refresh(message)
+    return message
+
+
+def assign_order_to_message(mail_db: Session, message: Message, order: Order) -> Message:
+    message.order_number = order.order_number
+    mail_db.commit()
+    mail_db.refresh(message)
+    return message
+
+
 def create_order(mail_db: Session, order_schema: OrderCreateSchema) -> Order:
     order = Order(**order_schema.dict())
     mail_db.add(order)
@@ -147,7 +168,11 @@ def get_or_create_order(mail_db: Session, order_schema: OrderCreateSchema) -> Or
     return order
 
 
-# def update
+def add_cdek_number_to_order(mail_db: Session, order: Order, cdek_number: str) -> Order:
+    order.cdek_number = cdek_number
+    mail_db.commit()
+    mail_db.refresh(order)
+    return order
 
 
 def get_messages_by_order(order: Order) -> list[Message]:
@@ -163,12 +188,6 @@ def get_messages_by_order(order: Order) -> list[Message]:
 #     mail_db.commit()
 #     mail_db.refresh(order)
 #     return order
-
-
-def assign_order_to_message(mail_db: Session, message: Message, order: Order) -> None:
-    message.order_number = order.order_number
-    mail_db.commit()
-    mail_db.refresh(message)
 
 
 def create_item(mail_db: Session, item_schema: ItemCreateSchema) -> Item:
@@ -190,9 +209,8 @@ def get_or_create_item(mail_db: Session, item_schema: ItemCreateSchema) -> Item:
     return item
 
 
-def assign_items_to_order(mail_db: Session, order: Order, items: list[Item]) -> None:
+def add_items_to_order(mail_db: Session, order: Order, items: list[Item]) -> Order:
     order.items = items
     mail_db.commit()
     mail_db.refresh(order)
-
-
+    return order

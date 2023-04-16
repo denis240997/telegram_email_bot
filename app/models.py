@@ -2,7 +2,7 @@ from enum import Enum as PyEnum
 
 from pydantic import Extra
 from pydantic_sqlalchemy import sqlalchemy_to_pydantic
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, Table, Enum
+from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, String, Table, Text
 from sqlalchemy.orm import backref, declarative_base, relationship
 
 UsersBase = declarative_base()
@@ -69,7 +69,7 @@ order_item = Table(
     MailboxBase.metadata,
     Column("order_number", String, ForeignKey("order.order_number")),
     Column("sku", String, ForeignKey("item.sku")),
-    Column("quantity", Integer, default=1),
+    # Column("quantity", Integer, default=1),
 )
 
 class OrderStatus(PyEnum):
@@ -91,6 +91,9 @@ class Order(MailboxBase):
         "Item", secondary=order_item, back_populates="orders"
     )
 
+    def to_dict(self):
+        return {column.name: getattr(self, column.name) for column in self.__table__.columns}
+
 
 class Item(MailboxBase):
     __tablename__ = "item"
@@ -106,7 +109,7 @@ class Item(MailboxBase):
 MailboxCreateSchema = sqlalchemy_to_pydantic(Mailbox, exclude=["mailbox_id", "user_id"])
 MessageCreateSchema = sqlalchemy_to_pydantic(Message)
 SenderCreateSchema = sqlalchemy_to_pydantic(Sender, exclude=["sender_id", "messages"])
-OrderCreateSchema = sqlalchemy_to_pydantic(Order, exclude=["messages", "items"])
+OrderCreateSchema = sqlalchemy_to_pydantic(Order, exclude=["messages"])
 ItemCreateSchema = sqlalchemy_to_pydantic(Item, exclude=["orders"])
 
 

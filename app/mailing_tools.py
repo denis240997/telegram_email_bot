@@ -10,22 +10,34 @@ from imap_tools import MailBox as MailboxClient
 from imap_tools import MailMessage
 from sqlalchemy.orm.session import Session
 
-from app.crud import get_or_create_message, get_or_create_sender, message_exists
+from app.crud import (
+    add_items_to_order,
+    add_cdek_number_to_order,
+    assign_order_to_message,
+    get_messages_by_sender_with_status,
+    get_or_create_item,
+    get_or_create_message,
+    get_or_create_order,
+    get_or_create_sender,
+    get_order_by_number,
+    mark_message_processed,
+    message_exists,
+)
 from app.models import (
+    Item,
+    ItemCreateSchema,
     MailboxSchema,
     Message,
     MessageCreateSchema,
-    Sender,
-    SenderCreateSchema,
-    Item,
+    MessageStatus,
     Order,
     OrderCreateSchema,
-    MessageStatus
+    OrderStatus,
+    Sender,
+    SenderCreateSchema,
 )
 
 MIN_DATE = date(2023, 1, 1)
-WB_EMAIL = "noreply@tilda.ws"
-CDEK_EMAIL = "noreply@cdek.ru"
 
 
 def get_imap_server_by_email(email: str) -> str or None:
@@ -64,7 +76,7 @@ def get_message_from_sender(mb: MailboxClient, sender_email: str) -> list[MailMe
 def get_message_from_sender_since_date(mb: MailboxClient, sender_email: str, date: date) -> list[MailMessage]:
     return mb.fetch(AND(from_=sender_email, date_gte=date), mark_seen=False)
 
-
+# parse_message -> message_to_db
 def parse_message(mail_db: Session, msg: MailMessage) -> Message:
     # print(msg.uid)
     sender_schema = SenderCreateSchema(email=msg.from_values.email, name=msg.from_values.name)
@@ -91,39 +103,93 @@ def gather_messages_since_date(mail_db: Session, mb: MailboxClient, date: date) 
         parse_message(mail_db, msg)
 
 
-    # if sender.email == WB_EMAIL:
-    #     print("#############################################")
-    #     print(sender.email)
-    #     soup = BeautifulSoup(message_schema.content, "html.parser")
+def wildberries_processor(mail_db: Session):
+    WB_EMAIL = "noreply@tilda.ws"
+    sender = get_or_create_sender(mail_db, SenderCreateSchema(email=WB_EMAIL))
+    for message in get_messages_by_sender_with_status(mail_db, sender, MessageStatus.UNPROCESSED):
 
-    #     title_regex = re.compile(r"(.+?)\s*\((.+),\s*Размер:\s*(.+)\)")
-    #     order_regex = re.compile(r"Order\s*#(\d+)")
-    #     price_regex = re.compile(r"(\d+)\s*RUB")
-    #     phone_regex = re.compile(r"Phone:\s*(.+)")
+        soup = BeautifulSoup(message.content, "html.parser")
 
-    #     order = order_regex.search(soup.text).groups()[0]
-    #     print(order)
+        title_regex = re.compile(r"(.+?)\s*\((.+),\s*Размер:\s*(.+)\)")
+        order_regex = re.compile(r"Order\s*#(\d+)")
+        price_regex = re.compile(r"(\d+)\s*RUB")
+        phone_regex = re.compile(r"Phone:\s*(.+)")
 
-    #     phone = tuple(soup.find(text="Purchaser information:").parent.next_siblings)[4].strip()
-    #     phone = phone_regex.match(phone).groups()[0]
-    #     print(phone)
+        try:
+            order_number = order_regex.search(soup.text).groups()[0]
 
-    #     item_rows = soup.find("table").find_all("tr", valign="middle")[1:]
-    #     for row in item_rows:
-    #         title, price, amount = (td.text.strip() for td in row.find_all("td")[2:5])
-    #         name, code, size = title_regex.match(title).groups()
-    #         price = int(price_regex.match(price).groups()[0])
-    #         amount = int(amount)
+            phone = tuple(soup.find(text="Purchaser information:").parent.next_siblings)[4].strip()
+            phone = phone_regex.match(phone).groups()[0]
 
-    #         print(name, code, size, price, amount, sep="\n")
-    #         print()
+            items = []
+            item_rows = soup.find("table").find_all("tr", valign="middle")[1:]
+            for row in item_rows:
+                title, price, amount = (td.text.strip() for td in row.find_all("td")[2:5])
+                name, sku, size = title_regex.match(title).groups()
+                price = int(price_regex.match(price).groups()[0])
+                amount = int(amount)    # Как зашить количество в промежуточную таблицу???
 
-    # elif sender.email == CDEK_EMAIL:
-    #     cdek_subject_regex = re.compile(r"Зарегистрирован заказ (\d+) \((.+)\)")
-    #     subject_match = cdek_subject_regex.match(message_schema.subject)
-    #     if subject_match:
-    #         print("#############################################")
-    #         print(sender.email)
-    #         cdek_order, order = subject_match.groups()
-    #         print(cdek_order, order)
-    #         print()
+                item_schema = ItemCreateSchema(
+                    sku=sku,
+                    name=name,
+                    size=size,
+                    price=price,
+                )
+                items.append(get_or_create_item(mail_db, item_schema))
+
+        except Exception as e:
+            print(e)
+            print("#" * 50)
+            print(message.subject)
+            print("\n\n\n")
+            continue
+
+        order_schema = OrderCreateSchema(
+            order_number=order_number,
+            # cdek_number=,
+            status=OrderStatus.CREATED,
+            customer_phone=phone,
+            # delivery_city=,
+        )
+        order = get_or_create_order(mail_db, order_schema)
+        order = add_items_to_order(mail_db, order, items)
+
+        # send notification to user
+
+        message = assign_order_to_message(mail_db, message, order)
+        message = mark_message_processed(mail_db, message)
+
+
+def cdek_processor(mail_db: Session):
+    CDEK_EMAIL = "noreply@cdek.ru"
+    sender = get_or_create_sender(mail_db, SenderCreateSchema(email=CDEK_EMAIL))
+    for message in get_messages_by_sender_with_status(mail_db, sender, MessageStatus.UNPROCESSED):
+
+        # soup = BeautifulSoup(message.content, "html.parser")
+
+        cdek_subject_regex = re.compile(r"Зарегистрирован заказ (\d+) \((.+)\)")
+        subject_match = cdek_subject_regex.match(message.subject)
+        if subject_match:
+            cdek_number, order_number = subject_match.groups()
+            print(cdek_number, order_number)
+
+            order = get_order_by_number(mail_db, order_number)
+            if order is None:
+                print(f"Order with number {order_number} not found in database. Skipping...")
+                continue
+
+            order = add_cdek_number_to_order(mail_db, order, cdek_number)
+
+            # send notification to user
+            print("#############################################")
+            print(order.to_dict())
+            print("#############################################\n\n")
+
+            message = assign_order_to_message(mail_db, message, order)
+
+        message = mark_message_processed(mail_db, message)
+
+
+def process_messages(mail_db: Session):
+    wildberries_processor(mail_db)
+    cdek_processor(mail_db)
