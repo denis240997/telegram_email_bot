@@ -96,7 +96,8 @@ class Item(MailboxBase):
     __tablename__ = "item"
     sku = Column(String, primary_key=True)
     name = Column(String)
-    size = Column(String)
+    size = Column(String, nullable=True)
+    color = Column(String, nullable=True)
     price = Column(Integer)
     order_items = relationship('OrderItem', backref=backref("item"))
 

@@ -24,16 +24,13 @@ from app.crud import (
     message_exists,
 )
 from app.models import (
-    Item,
     ItemCreateSchema,
     MailboxSchema,
     Message,
     MessageCreateSchema,
     MessageStatus,
-    Order,
     OrderCreateSchema,
     OrderStatus,
-    Sender,
     SenderCreateSchema,
 )
 
@@ -105,42 +102,48 @@ def wildberries_processor(mail_db: Session):
     WB_EMAIL = "noreply@tilda.ws"
     sender = get_or_create_sender(mail_db, SenderCreateSchema(email=WB_EMAIL))
     for message in get_messages_by_sender_with_status(mail_db, sender, MessageStatus.UNPROCESSED):
+        if message.subject != "New order [inneme.ru]":
+            continue
 
         soup = BeautifulSoup(message.content, "html.parser")
 
-        title_regex = re.compile(r"(.+?)\s*\((.+),\s*Размер:\s*(.+)\)")
+        title_regex = re.compile(r"(.+?)\s*\((.+)\)")
         order_regex = re.compile(r"Order\s*#(\d+)")
         price_regex = re.compile(r"(\d+)\s*RUB")
         phone_regex = re.compile(r"Phone:\s*(.+)")
 
-        try:
-            order_number = order_regex.search(soup.text).groups()[0]
+        order_number = order_regex.search(soup.text).groups()[0]
 
-            phone = tuple(soup.find(text="Purchaser information:").parent.next_siblings)[4].strip()
-            phone = phone_regex.match(phone).groups()[0]
+        phone = tuple(soup.find(text="Purchaser information:").parent.next_siblings)[4].strip()
+        phone = phone_regex.match(phone).groups()[0]
 
-            items = []
-            item_rows = soup.find("table").find_all("tr", valign="middle")[1:]
-            for row in item_rows:
-                title, price, amount = (td.text.strip() for td in row.find_all("td")[2:5])
-                name, sku, size = title_regex.match(title).groups()
-                price = int(price_regex.match(price).groups()[0])
-                amount = int(amount)    # Как зашить количество в промежуточную таблицу???
+        items = []
+        item_rows = soup.find("table").find_all("tr", valign="middle")[1:]
+        for row in item_rows:
+            title, price, amount = (td.text.strip() for td in row.find_all("td")[2:5])
+            name, description = title_regex.match(title).groups()
+            sku, *props = [s.strip() for s in description.split(",")]
+            size, color = None, None
+            for prop in props:
+                prop_name, prop_value = [s.strip() for s in prop.split(":")]
+                if prop_name == "Размер":
+                    size = prop_value
+                elif prop_name == "Цвет":
+                    color = prop_value
+                else:
+                    raise Exception(f"Unknown property {prop_name}={prop_value}")
 
-                item_schema = ItemCreateSchema(
-                    sku=sku,
-                    name=name,
-                    size=size,
-                    price=price,
-                )
-                items.append((get_or_create_item(mail_db, item_schema), amount))
+            price = int(price_regex.match(price).groups()[0])
+            amount = int(amount)
 
-        except Exception as e:
-            print(e)
-            print("#" * 50)
-            print(message.subject)
-            print("\n\n\n")
-            continue
+            item_schema = ItemCreateSchema(
+                sku=sku,
+                name=name,
+                size=size,
+                color=color,
+                price=price,
+            )
+            items.append((get_or_create_item(mail_db, item_schema), amount))
 
         order_schema = OrderCreateSchema(
             order_number=order_number,
