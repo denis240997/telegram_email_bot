@@ -71,9 +71,7 @@ def get_message_from_sender(mb: MailboxClient, sender_email: str) -> list[MailMe
 def get_message_from_sender_since_date(mb: MailboxClient, sender_email: str, date: date) -> list[MailMessage]:
     return mb.fetch(AND(from_=sender_email, date_gte=date), mark_seen=False)
 
-# parse_message -> message_to_db
 def parse_message(mail_db: Session, msg: MailMessage) -> Message:
-    # print(msg.uid)
     sender_schema = SenderCreateSchema(email=msg.from_values.email, name=msg.from_values.name)
     sender = get_or_create_sender(mail_db, sender_schema)
 
@@ -155,8 +153,6 @@ def wildberries_processor(mail_db: Session):
         order = get_or_create_order(mail_db, order_schema)
         order = add_items_to_order(mail_db, order, items)
 
-        # send notification to user
-
         message = assign_order_to_message(mail_db, message, order)
         message = mark_message_processed(mail_db, message)
 
@@ -172,20 +168,14 @@ def cdek_processor(mail_db: Session):
         subject_match = cdek_subject_regex.match(message.subject)
         if subject_match:
             cdek_number, order_number = subject_match.groups()
-            print(cdek_number, order_number)
+            # print(cdek_number, order_number)
 
             order = get_order_by_number(mail_db, order_number)
             if order is None:
-                print(f"Order with number {order_number} not found in database. Skipping...")
+                # print(f"Order with number {order_number} not found in database. Skipping...")
                 continue
 
             order = add_cdek_number_to_order(mail_db, order, cdek_number)
-
-            # send notification to user
-            print("#############################################")
-            print(order.to_dict())
-            print("#############################################\n\n")
-
             message = assign_order_to_message(mail_db, message, order)
 
         message = mark_message_processed(mail_db, message)
