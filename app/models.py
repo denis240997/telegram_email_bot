@@ -2,7 +2,7 @@ from enum import Enum as PyEnum
 
 from pydantic import Extra
 from pydantic_sqlalchemy import sqlalchemy_to_pydantic
-from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, String, Text
+from sqlalchemy import Column, Date, DateTime, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import backref, declarative_base, relationship
 
 UsersBase = declarative_base()
@@ -33,7 +33,7 @@ class Mailbox(UsersBase):
     imap_server_url = Column(String, default="imap.yandex.ru")
     imap_port = Column(Integer, default=993)
     mail_folder = Column(String, default="INBOX")
-    last_update = Column(DateTime, nullable=True)
+    last_update = Column(Date, nullable=True)
 
     def to_dict(self):
         return {column.name: getattr(self, column.name) for column in self.__table__.columns}

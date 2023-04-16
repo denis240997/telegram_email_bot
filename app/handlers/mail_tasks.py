@@ -20,10 +20,7 @@ def update_email(client: Client):
         if mailbox.last_update is None:
             mailbox.last_update = LAST_UPDATE_DEFAULT
 
-        if isinstance(mailbox.last_update, datetime):
-            last_update = mailbox.last_update.date()  # Fix field type in Mailbox model! DateTime -> Date
-        else:
-            last_update = mailbox.last_update
+        last_update = mailbox.last_update
         gather_messages_since_date(mail_db, mb, last_update)
         mailbox.last_update = date.today()
 
