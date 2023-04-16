@@ -13,6 +13,7 @@ from app.models import (
     Sender,
     SenderCreateSchema,
     User,
+    OrderItem,
 )
 
 
@@ -129,7 +130,6 @@ def get_messages_by_sender(mail_db: Session, sender: Sender) -> list[Message]:
     return mail_db.query(Message).filter(Message.sender_id == sender.id).all()
 
 
-# Get messages by sender with certain MessageStatus
 def get_messages_by_sender_with_status(mail_db: Session, sender: Sender, status: MessageStatus) -> list[Message]:
     return mail_db.query(Message).filter(Message.sender_id == sender.sender_id, Message.status == status).all()
 
@@ -179,17 +179,6 @@ def get_messages_by_order(order: Order) -> list[Message]:
     return order.messages
 
 
-# def get_or_create_order(mail_db: Session, order_number: str) -> Order:
-#     order = mail_db.query(Order).filter(Order.order_number == order_number).first()
-#     if order:
-#         return order
-#     order = Order(order_number=order_number)
-#     mail_db.add(order)
-#     mail_db.commit()
-#     mail_db.refresh(order)
-#     return order
-
-
 def create_item(mail_db: Session, item_schema: ItemCreateSchema) -> Item:
     item = Item(**item_schema.dict())
     mail_db.add(item)
@@ -209,8 +198,19 @@ def get_or_create_item(mail_db: Session, item_schema: ItemCreateSchema) -> Item:
     return item
 
 
-def add_items_to_order(mail_db: Session, order: Order, items: list[Item]) -> Order:
-    order.items = items
+def add_items_to_order(mail_db: Session, order: Order, items: list[tuple[Item, int]]) -> Order:
+    for item, quantity in items:
+        order_item = OrderItem(order=order, item=item, quantity=quantity)
+        order.order_items.append(order_item)
+    mail_db.add(order)
     mail_db.commit()
     mail_db.refresh(order)
     return order
+
+
+def get_order_items(order: Order) -> list[tuple[Item, int]]:
+    return [(order_item.item, order_item.quantity) for order_item in order.order_items]
+
+
+def get_item_orders(item: Item) -> list[Order]:
+    return [order_item.order for order_item in item.order_items]

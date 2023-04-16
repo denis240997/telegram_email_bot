@@ -64,13 +64,12 @@ class Message(MailboxBase):
     order_number = Column(String, ForeignKey("order.order_number"), nullable=True)
 
 
-order_item = Table(
-    "order_item",
-    MailboxBase.metadata,
-    Column("order_number", String, ForeignKey("order.order_number")),
-    Column("sku", String, ForeignKey("item.sku")),
-    # Column("quantity", Integer, default=1),
-)
+class OrderItem(MailboxBase):
+    __tablename__ = 'order_item'
+    order_number = Column(String, ForeignKey('order.order_number'), primary_key=True)
+    sku = Column(String, ForeignKey('item.sku'), primary_key=True)
+    quantity = Column(Integer, default=1)
+
 
 class OrderStatus(PyEnum):
     CREATED = "created"
@@ -87,9 +86,7 @@ class Order(MailboxBase):
     customer_phone = Column(String, nullable=True)
     delivery_city = Column(String, nullable=True)
     messages = relationship("Message", backref=backref("order"))
-    items = relationship(
-        "Item", secondary=order_item, back_populates="orders"
-    )
+    order_items = relationship('OrderItem', backref=backref("order"))
 
     def to_dict(self):
         return {column.name: getattr(self, column.name) for column in self.__table__.columns}
@@ -101,9 +98,7 @@ class Item(MailboxBase):
     name = Column(String)
     size = Column(String)
     price = Column(Integer)
-    orders = relationship(
-        "Order", secondary=order_item, back_populates="items"
-    )
+    order_items = relationship('OrderItem', backref=backref("item"))
 
 
 MailboxCreateSchema = sqlalchemy_to_pydantic(Mailbox, exclude=["mailbox_id", "user_id"])

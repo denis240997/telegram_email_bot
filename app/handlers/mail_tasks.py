@@ -15,7 +15,6 @@ def update_email(client: Client):
     print("update_email")
     mailbox = client.user_mailbox
     with get_mailbox(mailbox) as mb, get_mail_db(mailbox) as mail_db:
-        # mailbox.last_update = LAST_UPDATE_DEFAULT
         if mailbox.last_update is None:
             mailbox.last_update = LAST_UPDATE_DEFAULT
 

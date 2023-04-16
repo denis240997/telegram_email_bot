@@ -37,8 +37,6 @@ from app.models import (
     SenderCreateSchema,
 )
 
-MIN_DATE = date(2023, 1, 1)
-
 
 def get_imap_server_by_email(email: str) -> str or None:
     imap_servers_table = {
@@ -135,7 +133,7 @@ def wildberries_processor(mail_db: Session):
                     size=size,
                     price=price,
                 )
-                items.append(get_or_create_item(mail_db, item_schema))
+                items.append((get_or_create_item(mail_db, item_schema), amount))
 
         except Exception as e:
             print(e)
