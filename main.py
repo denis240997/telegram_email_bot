@@ -5,7 +5,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from pyrogram import Client
 from pyrogram.types import BotCommand
 
-from app.handlers import mail_tasks, mailbox, sender, start, test, notifications
+from app.handlers import mail_tasks, mailbox, notifications, sender, start, test
 
 # Pyrogram Client credentials
 API_ID = os.environ.get("API_ID")

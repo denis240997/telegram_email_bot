@@ -10,11 +10,11 @@ from app.models import (
     MessageStatus,
     Order,
     OrderCreateSchema,
+    OrderItem,
+    OrderStatus,
     Sender,
     SenderCreateSchema,
     User,
-    OrderItem,
-    OrderStatus,
 )
 
 

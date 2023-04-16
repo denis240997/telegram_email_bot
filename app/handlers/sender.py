@@ -4,8 +4,8 @@ from pyrogram.types import Message
 
 from app.crud import get_or_create_sender
 from app.db import get_mail_db
-from app.handlers.utils import field_request, get_field_handler
 from app.handlers.decorators import handle_mailbox_not_exists
+from app.handlers.utils import field_request, get_field_handler
 from app.models import SenderCreateSchema
 
 

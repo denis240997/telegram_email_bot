@@ -2,7 +2,7 @@ from enum import Enum as PyEnum
 
 from pydantic import Extra
 from pydantic_sqlalchemy import sqlalchemy_to_pydantic
-from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, String, Table, Text
+from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import backref, declarative_base, relationship
 
 UsersBase = declarative_base()
@@ -65,9 +65,9 @@ class Message(MailboxBase):
 
 
 class OrderItem(MailboxBase):
-    __tablename__ = 'order_item'
-    order_number = Column(String, ForeignKey('order.order_number'), primary_key=True)
-    sku = Column(String, ForeignKey('item.sku'), primary_key=True)
+    __tablename__ = "order_item"
+    order_number = Column(String, ForeignKey("order.order_number"), primary_key=True)
+    sku = Column(String, ForeignKey("item.sku"), primary_key=True)
     quantity = Column(Integer, default=1)
 
 
@@ -86,7 +86,7 @@ class Order(MailboxBase):
     customer_phone = Column(String, nullable=True)
     delivery_city = Column(String, nullable=True)
     messages = relationship("Message", backref=backref("order"))
-    order_items = relationship('OrderItem', backref=backref("order"))
+    order_items = relationship("OrderItem", backref=backref("order"))
 
     def to_dict(self):
         return {column.name: getattr(self, column.name) for column in self.__table__.columns}
@@ -99,7 +99,7 @@ class Item(MailboxBase):
     size = Column(String, nullable=True)
     color = Column(String, nullable=True)
     price = Column(Integer)
-    order_items = relationship('OrderItem', backref=backref("item"))
+    order_items = relationship("OrderItem", backref=backref("item"))
 
 
 MailboxCreateSchema = sqlalchemy_to_pydantic(Mailbox, exclude=["mailbox_id", "user_id"])

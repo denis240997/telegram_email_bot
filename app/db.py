@@ -38,7 +38,7 @@ class MailboxNotExistsError(Exception):
 def get_mail_db(mailbox: MailboxSchema) -> Session:
     if mailbox is None:
         raise MailboxNotExistsError("Mailbox is None")
-    
+
     mailbox_id = mailbox.mailbox_id
     user_id = mailbox.user_id
     sqlite_mail_db_path = os.path.join(SQLITE_MAIL_DB_PATH, f"{user_id}_{mailbox_id}.sqlite")

@@ -1,12 +1,12 @@
 import asyncio
 
 from pyrogram import Client
-from sqlalchemy.orm import ColumnProperty
 from sqlalchemy import event
+from sqlalchemy.orm import ColumnProperty
 
-from app.models import Order, OrderStatus, Item
 from app.crud import get_order_items
 from app.handlers.decorators import handle_mailbox_not_exists
+from app.models import Item, Order, OrderStatus
 
 
 def stringify_item(item: Item, amount: int) -> str:
@@ -16,7 +16,10 @@ def stringify_item(item: Item, amount: int) -> str:
 
 
 def stringify_order(order: Order) -> str:
-    order_repr = f"Order {order.order_number}:\nCDEK number: {order.cdek_number}\nCustomer phone: {order.customer_phone}\n\n"
+    order_repr = f"Order {order.order_number}:\n"
+    order_repr += f"CDEK number: {order.cdek_number}\n"
+    order_repr += f"Customer phone: {order.customer_phone}\n"
+    order_repr += f"Delivery city: {order.delivery_city}\n\n"
     for item, amount in get_order_items(order):
         order_repr += stringify_item(item, amount)
     return order_repr
@@ -26,11 +29,11 @@ def stringify_order(order: Order) -> str:
 def register_notifications(client: Client) -> None:
     loop = asyncio.get_event_loop()
 
-    def notify_on_order_accepted_to_delivery(target: Order, value: str, old_value: str, initiator: ColumnProperty) -> None:
+    def notify_on_order_accepted_to_delivery(
+        target: Order, value: str, old_value: str, initiator: ColumnProperty
+    ) -> None:
         if value == OrderStatus.ACCEPTED_TO_DELIVERY and value != old_value:
-            
             user_id = client.user_mailbox.user_id
             loop.create_task(client.send_message(user_id, stringify_order(target)))
 
-
-    event.listen(Order.status, 'set', notify_on_order_accepted_to_delivery)
+    event.listen(Order.status, "set", notify_on_order_accepted_to_delivery)

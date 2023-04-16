@@ -11,8 +11,8 @@ from imap_tools import MailMessage
 from sqlalchemy.orm.session import Session
 
 from app.crud import (
-    add_items_to_order,
     add_cdek_number_to_order,
+    add_items_to_order,
     assign_order_to_message,
     get_messages_by_sender_with_status,
     get_or_create_item,
@@ -71,17 +71,18 @@ def get_message_from_sender(mb: MailboxClient, sender_email: str) -> list[MailMe
 def get_message_from_sender_since_date(mb: MailboxClient, sender_email: str, date: date) -> list[MailMessage]:
     return mb.fetch(AND(from_=sender_email, date_gte=date), mark_seen=False)
 
+
 def parse_message(mail_db: Session, msg: MailMessage) -> Message:
     sender_schema = SenderCreateSchema(email=msg.from_values.email, name=msg.from_values.name)
     sender = get_or_create_sender(mail_db, sender_schema)
 
     message_schema = MessageCreateSchema(
-        uid=msg.uid, 
-        sender_id=sender.sender_id, 
-        subject=msg.subject, 
-        content=msg.text or msg.html, 
-        date=msg.date, 
-        status=MessageStatus.UNPROCESSED
+        uid=msg.uid,
+        sender_id=sender.sender_id,
+        subject=msg.subject,
+        content=msg.text or msg.html,
+        date=msg.date,
+        status=MessageStatus.UNPROCESSED,
     )
     message = get_or_create_message(mail_db, message_schema)
     return message
@@ -161,7 +162,6 @@ def cdek_processor(mail_db: Session):
     CDEK_EMAIL = "noreply@cdek.ru"
     sender = get_or_create_sender(mail_db, SenderCreateSchema(email=CDEK_EMAIL))
     for message in get_messages_by_sender_with_status(mail_db, sender, MessageStatus.UNPROCESSED):
-
         # soup = BeautifulSoup(message.content, "html.parser")
 
         cdek_subject_regex = re.compile(r"Зарегистрирован заказ (\d+) \((.+)\)")

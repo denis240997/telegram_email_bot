@@ -48,7 +48,8 @@ async def choose_mailbox(client: Client, message: Message) -> MailboxSchema or N
         mailbox_list = get_user_mailboxes(user)
         if mailbox_list:
             sent_message = await message.reply_text(
-                "Choose a mailbox:", reply_markup=generate_mailbox_keyboard(mailbox_list, MailboxKeyboardMethods.CHOOSE)
+                "Choose a mailbox:",
+                reply_markup=generate_mailbox_keyboard(mailbox_list, MailboxKeyboardMethods.CHOOSE),
             )
             client.futures[sent_message.id] = user_choice
             chosen_mailbox = await user_choice
@@ -68,7 +69,8 @@ async def remove_mailbox(client: Client, message: Message):
         mailbox_list = get_user_mailboxes(user)
         if mailbox_list:
             await message.reply_text(
-                "Choose a mailbox to remove:", reply_markup=generate_mailbox_keyboard(mailbox_list, MailboxKeyboardMethods.DELETE)
+                "Choose a mailbox to remove:",
+                reply_markup=generate_mailbox_keyboard(mailbox_list, MailboxKeyboardMethods.DELETE),
             )
         else:
             await message.reply_text("You don't have any mailboxes yet. Type /add_mailbox command to add one.")

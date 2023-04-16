@@ -2,7 +2,6 @@ from pyrogram import Client, filters
 from pyrogram.handlers import MessageHandler
 from pyrogram.types import Message
 
-from app.handlers.mailbox import set_user_mailbox
 from app.handlers.decorators import handle_mailbox_not_exists
 
 
