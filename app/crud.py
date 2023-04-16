@@ -14,6 +14,7 @@ from app.models import (
     SenderCreateSchema,
     User,
     OrderItem,
+    OrderStatus,
 )
 
 
@@ -170,6 +171,7 @@ def get_or_create_order(mail_db: Session, order_schema: OrderCreateSchema) -> Or
 
 def add_cdek_number_to_order(mail_db: Session, order: Order, cdek_number: str) -> Order:
     order.cdek_number = cdek_number
+    order.status = OrderStatus.ACCEPTED_TO_DELIVERY
     mail_db.commit()
     mail_db.refresh(order)
     return order
