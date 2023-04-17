@@ -88,19 +88,19 @@ async def process_mailbox_choice(client: Client, callback_query: CallbackQuery):
         mailbox = get_mailbox_by_id(users_db, mailbox_id)
         selected_mailbox = MailboxSchema(**mailbox.to_dict())
         if method == MailboxKeyboardMethods.CHOOSE:
-            client.user_mailbox = selected_mailbox
+            client.users_mailboxes[callback_query.from_user.id] = selected_mailbox
             set_user_active_mailbox(users_db, user, mailbox_id)
 
             message_id = callback_query.message.id
-            client.futures[message_id].set_result(client.user_mailbox)
+            client.futures[message_id].set_result(selected_mailbox)
             del client.futures[message_id]
 
-            await callback_query.answer(f"You have chosen {client.user_mailbox.email}")
-            await callback_query.message.edit_text(f"You have chosen {client.user_mailbox.email}")
+            await callback_query.answer(f"You have chosen {selected_mailbox.email}")
+            await callback_query.message.edit_text(f"You have chosen {selected_mailbox.email}")
 
         elif method == MailboxKeyboardMethods.DELETE:
             if get_user_active_mailbox(users_db, user).mailbox_id == mailbox_id:
-                client.user_mailbox = None
+                client.users_mailboxes[callback_query.from_user.id] = None
                 set_user_active_mailbox(users_db, user, None)
 
             delete_mailbox_by_id(users_db, mailbox_id)
@@ -124,10 +124,11 @@ async def add_mailbox(client: Client, message: Message):
     with get_users_db() as users_db:
         user = get_or_create_user(users_db, message.from_user.id)
         mailbox = create_mailbox(users_db, user, new_mailbox).to_dict()
-        client.user_mailbox = MailboxSchema(**mailbox)
-        set_user_active_mailbox(users_db, user, client.user_mailbox.mailbox_id)
+        mailbox_schema = MailboxSchema(**mailbox)
+        client.users_mailboxes[message.from_user.id] = mailbox_schema
+        set_user_active_mailbox(users_db, user, mailbox_schema.mailbox_id)
 
-    await message.reply_text(f"You have added {client.user_mailbox.email} as your mailbox.")
+    await message.reply_text(f"You have added {mailbox_schema.email} as your mailbox.")
 
 
 create_mailbox_handler = MessageHandler(add_mailbox, filters.command("add_mailbox") & filters.private)
@@ -143,7 +144,8 @@ async def set_user_mailbox(client: Client, message: Message):
         user = get_or_create_user(users_db, message.from_user.id)
         if user.active_mailbox_id:
             mailbox = get_user_active_mailbox(users_db, user).to_dict()
-            client.user_mailbox = MailboxSchema(**mailbox)
-            await message.reply_text(f"Your active mailbox is {client.user_mailbox.email}")
+            mailbox_schema = MailboxSchema(**mailbox)
+            client.users_mailboxes[message.from_user.id] = mailbox_schema
+            await message.reply_text(f"Your active mailbox is {mailbox_schema.email}")
         else:
-            client.user_mailbox = await choose_mailbox(client, message)
+            client.users_mailboxes[message.from_user.id] = await choose_mailbox(client, message)

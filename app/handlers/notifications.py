@@ -1,11 +1,13 @@
+import re
 import asyncio
 
 from pyrogram import Client
+from pyrogram.types import Message
 from sqlalchemy import event
-from sqlalchemy.orm import ColumnProperty
+from sqlalchemy.orm import Session
+from sqlalchemy.orm.attributes import Event
 
 from app.crud import get_order_items
-from app.handlers.decorators import handle_mailbox_not_exists
 from app.models import Item, Order, OrderStatus
 
 
@@ -25,15 +27,16 @@ def stringify_order(order: Order) -> str:
     return order_repr
 
 
-@handle_mailbox_not_exists
 def register_notifications(client: Client) -> None:
     loop = asyncio.get_event_loop()
 
     def notify_on_order_accepted_to_delivery(
-        target: Order, value: str, old_value: str, initiator: ColumnProperty
+        target: Order, value: str, old_value: str, initiator: Event
     ) -> None:
         if value == OrderStatus.ACCEPTED_TO_DELIVERY and value != old_value:
-            user_id = client.user_mailbox.user_id
+            db_url = str(Session.object_session(target).get_bind().url)
+            db_url_user_id_regex = re.compile(r".+/(\d+)_")
+            user_id = db_url_user_id_regex.match(db_url).groups()[0]
             loop.create_task(client.send_message(user_id, stringify_order(target)))
 
     event.listen(Order.status, "set", notify_on_order_accepted_to_delivery)

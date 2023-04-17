@@ -12,17 +12,13 @@ from app.models import SenderCreateSchema
 @handle_mailbox_not_exists
 async def add_sender(client: Client, message: Message):
     print("add_sender")
-    mailbox = client.user_mailbox
-    if not mailbox:
-        await message.reply_text("You don't have active mailbox yet. Type /choose_mailbox command to choose one.")
-        return
-
-    with get_mail_db(mailbox) as mail_db:
+    mailbox_schema = client.users_mailboxes[message.from_user.id]
+    with get_mail_db(mailbox_schema) as mail_db:
         sender_email = await field_request(client, message, "sender_email", "Enter sender email:")
         new_sender = SenderCreateSchema(email=sender_email)
         sender = get_or_create_sender(mail_db, new_sender)
 
-        await message.reply_text(f"Sender {sender.email} has been added to mailbox {mailbox.email}.")
+        await message.reply_text(f"Sender {sender.email} has been added to mailbox {mailbox_schema.email}.")
 
 
 add_sender_handler = MessageHandler(add_sender, filters.command("add_sender") & filters.private)

@@ -1,4 +1,5 @@
 import os
+from collections import defaultdict
 
 import uvloop
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -61,7 +62,7 @@ commands = [
 if __name__ == "__main__":
     app.scheduler = AsyncIOScheduler()
     app.scheduler.start()
-    app.user_mailbox = None
-    app.futures = {}
+    app.users_mailboxes = defaultdict(lambda: None)
+    app.futures = {}    # персонализировать!
     app.commands = commands
     app.run()
