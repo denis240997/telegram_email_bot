@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date
 
 from pyrogram import Client, filters
 from pyrogram.handlers import MessageHandler
