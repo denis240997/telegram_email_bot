@@ -34,7 +34,7 @@ handlers = [
     mailbox.process_imap_server_handler,
     sender.add_sender_handler,
     sender.process_sender_email_handler,
-    test.test_handler,
+    # test.test_handler,
     mail_tasks.schedule_email_update_handler,
     mail_tasks.remove_scheduled_email_update_handler,
 ]
@@ -51,9 +51,8 @@ commands = [
     BotCommand("add_mailbox", "Add new mailbox"),
     BotCommand("choose_mailbox", "Choose mailbox"),
     BotCommand("remove_mailbox", "Remove mailbox"),
-    BotCommand("add_sender", "Add sender to mailbox"),
+    # BotCommand("add_sender", "Add sender to mailbox"),
     
-    BotCommand("test", "Test"),
     BotCommand("schedule_email_update", "Schedule email update"),
     BotCommand("remove_scheduled_email_update", "Remove scheduled email update"),
 ]

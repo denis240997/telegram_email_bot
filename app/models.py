@@ -28,7 +28,7 @@ class Mailbox(UsersBase):
     __tablename__ = "mailbox"
     mailbox_id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("user.user_id"))
-    email = Column(String, unique=True)
+    email = Column(String)
     password = Column(String)
     imap_server_url = Column(String, default="imap.yandex.ru")
     imap_port = Column(Integer, default=993)
