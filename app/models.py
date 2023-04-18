@@ -50,6 +50,7 @@ class Sender(MailboxBase):
 class MessageStatus(PyEnum):
     UNPROCESSED = "unprocessed"
     PROCESSED = "processed"
+    IRRELEVANT = "irrelevant"
     FAILED_TO_PROCESS = "failed_to_process"
 
 

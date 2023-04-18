@@ -12,6 +12,7 @@ from sqlalchemy.orm.session import Session
 
 from app.crud import (
     add_cdek_number_to_order,
+    add_delivery_city_to_order,
     add_items_to_order,
     assign_order_to_message,
     get_messages_by_sender_with_status,
@@ -20,6 +21,8 @@ from app.crud import (
     get_or_create_order,
     get_or_create_sender,
     get_order_by_number,
+    get_unprocessed_messages,
+    mark_message_irrelevant,
     mark_message_processed,
     message_exists,
 )
@@ -168,19 +171,38 @@ def cdek_processor(mail_db: Session):
         subject_match = cdek_subject_regex.match(message.subject)
         if subject_match:
             cdek_number, order_number = subject_match.groups()
-            # print(cdek_number, order_number)
+            recipient_regex = re.compile(r"Получатель(\n.+){5}\n\s*(.+)<br>")
+
+            # Something sinister is happening here! 
+            # Without this manipulation, the regular expression does not work
+            #######################################
+            with open("parser_buffer.html", "w") as f:
+                f.write(message.content)
+            with open("parser_buffer.html", "r") as f:
+                content = f.read()
+            #######################################
+
+            delivery_city = recipient_regex.search(content).groups()[1]
 
             order = get_order_by_number(mail_db, order_number)
             if order is None:
-                # print(f"Order with number {order_number} not found in database. Skipping...")
                 continue
-
-            order = add_cdek_number_to_order(mail_db, order, cdek_number)
+            
+            order = add_delivery_city_to_order(mail_db, order, delivery_city)
+            order = add_cdek_number_to_order(mail_db, order, cdek_number)   # triggers user notification
             message = assign_order_to_message(mail_db, message, order)
+            message = mark_message_processed(mail_db, message)
 
-        message = mark_message_processed(mail_db, message)
+        else:
+            message = mark_message_irrelevant(mail_db, message)
+
+
+def irrelevant_messages_processor(mail_db: Session):
+    for message in get_unprocessed_messages(mail_db):
+        message = mark_message_irrelevant(mail_db, message)
 
 
 def process_messages(mail_db: Session):
     wildberries_processor(mail_db)
     cdek_processor(mail_db)
+    irrelevant_messages_processor(mail_db)

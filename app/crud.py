@@ -135,8 +135,20 @@ def get_messages_by_sender_with_status(mail_db: Session, sender: Sender, status:
     return mail_db.query(Message).filter(Message.sender_id == sender.sender_id, Message.status == status).all()
 
 
+def get_unprocessed_messages(mail_db: Session) -> list[Message]:
+    return mail_db.query(Message).filter(Message.status == MessageStatus.UNPROCESSED).all()
+
+
 def mark_message_processed(mail_db: Session, message: Message) -> Message:
     message.status = MessageStatus.PROCESSED
+    message.content = None
+    mail_db.commit()
+    mail_db.refresh(message)
+    return message
+
+
+def mark_message_irrelevant(mail_db: Session, message: Message) -> Message:
+    message.status = MessageStatus.IRRELEVANT
     message.content = None
     mail_db.commit()
     mail_db.refresh(message)
@@ -169,9 +181,17 @@ def get_or_create_order(mail_db: Session, order_schema: OrderCreateSchema) -> Or
     return order
 
 
+# Triggers user notification
 def add_cdek_number_to_order(mail_db: Session, order: Order, cdek_number: str) -> Order:
     order.cdek_number = cdek_number
     order.status = OrderStatus.ACCEPTED_TO_DELIVERY
+    mail_db.commit()
+    mail_db.refresh(order)
+    return order
+
+
+def add_delivery_city_to_order(mail_db: Session, order: Order, city: str) -> Order:
+    order.delivery_city = city
     mail_db.commit()
     mail_db.refresh(order)
     return order
