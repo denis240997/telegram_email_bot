@@ -31,11 +31,11 @@ class MailboxKeyboardMethods(PyEnum):
     DELETE = "delete"
 
 
-def generate_mailbox_keyboard(mailbox_list: list[Mailbox], method: str) -> InlineKeyboardMarkup:
+def generate_mailbox_keyboard(mailbox_list: list[Mailbox], method: MailboxKeyboardMethods) -> InlineKeyboardMarkup:
     print("generate_mailbox_keyboard")
     keyboard = []
     for mailbox in mailbox_list:
-        keyboard.append([InlineKeyboardButton(mailbox.email, callback_data=f"mailbox_{method}_{mailbox.mailbox_id}")])
+        keyboard.append([InlineKeyboardButton(mailbox.email, callback_data=f"mailbox_{method.value}_{mailbox.mailbox_id}")])
 
     return InlineKeyboardMarkup(keyboard)
 
@@ -81,7 +81,7 @@ remove_mailbox_handler = MessageHandler(remove_mailbox, filters.command("remove_
 
 async def process_mailbox_choice(client: Client, callback_query: CallbackQuery):
     print("process_mailbox_choice")
-    method = callback_query.data.split("_")[1]
+    method = MailboxKeyboardMethods(callback_query.data.split("_")[1])
     mailbox_id = int(callback_query.data.split("_")[2])
     with get_users_db() as users_db:
         user = get_or_create_user(users_db, callback_query.from_user.id)
