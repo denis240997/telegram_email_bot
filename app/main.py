@@ -7,6 +7,7 @@ from pyrogram import Client
 from pyrogram.types import BotCommand
 
 from app.handlers import mail_tasks, mailbox, notifications, sender, start
+from app.handlers.mailbox import upload_users_active_mailboxes
 
 # Pyrogram Client credentials
 API_ID = os.environ.get("API_ID")
@@ -62,6 +63,7 @@ if __name__ == "__main__":
     app.scheduler = AsyncIOScheduler()
     app.scheduler.start()
     app.users_mailboxes = defaultdict(lambda: None)
+    upload_users_active_mailboxes(app)
     app.futures = {}    # персонализировать!
     app.commands = commands
     app.run()

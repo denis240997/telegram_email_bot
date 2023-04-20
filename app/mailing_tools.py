@@ -147,7 +147,6 @@ def wildberries_processor(mail_db: Session):
             )
             items.append((get_or_create_item(mail_db, item_schema), amount))
 
-        # print("wildberries_processor", message.date, type(message.date))
         order_schema = OrderCreateSchema(
             order_number=order_number,
             creation_date=message.date,

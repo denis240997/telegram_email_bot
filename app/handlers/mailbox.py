@@ -13,6 +13,7 @@ from pyrogram.types import (
 from app.crud import (
     create_mailbox,
     delete_mailbox_by_id,
+    get_all_users,
     get_mailbox_by_id,
     get_or_create_user,
     get_user_active_mailbox,
@@ -149,3 +150,12 @@ async def set_user_mailbox(client: Client, message: Message):
             await message.reply_text(f"Your active mailbox is {mailbox_schema.email}")
         else:
             client.users_mailboxes[message.from_user.id] = await choose_mailbox(client, message)
+
+
+def upload_users_active_mailboxes(client: Client):
+    with get_users_db() as users_db:
+        for user in get_all_users(users_db):
+            if user.active_mailbox_id:
+                mailbox = get_user_active_mailbox(users_db, user).to_dict()
+                mailbox_schema = MailboxSchema(**mailbox)
+                client.users_mailboxes[user.user_id] = mailbox_schema

@@ -26,6 +26,10 @@ def create_user(users_db: Session, user_id: int) -> User:
     return user
 
 
+def get_all_users(users_db: Session) -> list[User]:
+    return users_db.query(User).all()
+
+
 def get_user_by_id(users_db: Session, user_id: int) -> User:
     return users_db.query(User).filter(User.user_id == user_id).first()
 
