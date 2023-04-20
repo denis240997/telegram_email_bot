@@ -25,3 +25,9 @@ docker start bot_container
 docker attach bot_container
 docker stop bot_container
 docker rm bot_container
+
+# Deploy to DockerHub
+
+docker login
+docker tag mail_bot khamit97/inneme_bot:latest
+docker push khamit97/inneme_bot:latest
