@@ -11,9 +11,11 @@ RUN pip install --upgrade pip
 COPY ./requirements.txt .
 RUN pip install -r requirements.txt
 
+# creating directories for the database and config files
 RUN mkdir -p /app/volume
+
+# copy project
 COPY . .
 
-# run entrypoint.sh
+# run run_script.sh
 ENTRYPOINT ["/app/run_script.sh"]
-# ENTRYPOINT ["/bin/bash"]
