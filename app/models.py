@@ -82,6 +82,7 @@ class OrderStatus(PyEnum):
 class Order(MailboxBase):
     __tablename__ = "order"
     order_number = Column(String, primary_key=True)
+    creation_date = Column(DateTime)
     cdek_number = Column(String, nullable=True)
     status = Column(Enum(OrderStatus), default=OrderStatus.CREATED)
     customer_phone = Column(String, nullable=True)

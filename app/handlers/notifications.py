@@ -18,7 +18,8 @@ def stringify_item(item: Item, amount: int) -> str:
 
 
 def stringify_order(order: Order) -> str:
-    order_repr = f"Order {order.order_number}:\n"
+    order_repr = order.creation_date.strftime("%d.%m.%Y %H:%M") + "\n"
+    order_repr += f"Order {order.order_number}:\n"
     order_repr += f"CDEK number: {order.cdek_number}\n"
     order_repr += f"Customer phone: {order.customer_phone}\n"
     order_repr += f"Delivery city: {order.delivery_city}\n\n"
