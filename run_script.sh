@@ -1,5 +1,5 @@
 #!/bin/bash
 
-source <(grep -v '^#' settings.txt | xargs -I {} echo "export {}")
+source <(grep -v '^#' /app/volume/settings.txt | xargs -I {} echo "export {}")
 
-/home/hamit/Desktop/inneme/env/bin/python /home/hamit/Desktop/inneme/main.py
+python /app/main.py

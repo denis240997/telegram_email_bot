@@ -1,0 +1,7 @@
+*.sqlite
+dev_setup.py
+test.py
+parser_buffer*
+*.session*
+.*
+settings.txt

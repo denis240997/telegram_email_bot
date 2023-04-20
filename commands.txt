@@ -11,3 +11,17 @@ python -m black ./app/ --config ./pyproject.toml
 python -m isort ./ --check-only
 python -m isort ./ --diff --color
 python -m isort ./
+
+
+######################
+        Docker
+######################
+
+docker build -t mail_bot .
+
+docker run -d --name bot_container -v ./:/app/volume mail_bot
+
+docker start bot_container
+docker attach bot_container
+docker stop bot_container
+docker rm bot_container

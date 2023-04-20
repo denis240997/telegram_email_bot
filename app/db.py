@@ -9,8 +9,11 @@ from app.models import MailboxBase, MailboxSchema, UsersBase
 
 ECHO_DB_ACTIONS = os.getenv("ECHO_DB_ACTIONS", False)
 
-SQLITE_USERS_DB_PATH = os.path.join("db", "email.sqlite")
-SQLITE_MAIL_DB_PATH = os.path.join("db", "users")
+SQLITE_USERS_DB_PATH = os.path.join("volume", "db", "email.sqlite")
+SQLITE_MAIL_DB_PATH = os.path.join("volume", "db", "users")
+
+
+os.makedirs(SQLITE_MAIL_DB_PATH, exist_ok=True)
 
 
 @contextmanager

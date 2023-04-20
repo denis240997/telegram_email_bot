@@ -38,7 +38,7 @@ async def schedule_email_update(client: Client, message: Message):
     if hasattr(client, "email_update_job"):
         await message.reply_text("There is already an email update job scheduled.")
         return
-    await update_email(client, message)    # update email immediately
+    # await update_email(client, message)    # update email immediately
     client.email_update_job = client.scheduler.add_job(update_email, args=[client, message], trigger="interval", minutes=10)
     await message.reply_text("Email update job scheduled.")
 
