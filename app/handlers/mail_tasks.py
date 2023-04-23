@@ -34,12 +34,13 @@ async def update_email(client: Client, message: Message):
 
 
 async def schedule_email_update(client: Client, message: Message):
-    print("schedule_email_update")
-    if hasattr(client, "email_update_job"):
+    user_id = message.from_user.id
+    print(f"schedule_email_update_for_{user_id}")
+    if user_id in client.email_update_jobs:
         await message.reply_text("There is already an email update job scheduled.")
         return
     await update_email(client, message)    # update email immediately
-    client.email_update_job = client.scheduler.add_job(update_email, args=[client, message], trigger="interval", minutes=10)
+    client.email_update_jobs[user_id] = client.scheduler.add_job(update_email, args=[client, message], trigger="interval", minutes=10)
     await message.reply_text("Email update job scheduled.")
 
 
@@ -49,13 +50,15 @@ schedule_email_update_handler = MessageHandler(
 
 
 async def remove_scheduled_email_update(client: Client, message: Message):
-    print("remove_scheduled_email_update")
-    if hasattr(client, "email_update_job"):
-        client.email_update_job.remove()
-        del client.email_update_job
-        await message.reply_text("Email update job removed.")
-    else:
+    user_id = message.from_user.id
+    print(f"remove_scheduled_email_update_for_{user_id}")
+
+    if user_id not in client.email_update_jobs:
         await message.reply_text("There is no email update job to remove.")
+        return
+    client.email_update_job.remove()
+    del client.email_update_jobs[user_id]
+    await message.reply_text("Email update job removed.")
 
 
 remove_scheduled_email_update_handler = MessageHandler(

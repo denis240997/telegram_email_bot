@@ -63,6 +63,7 @@ if __name__ == "__main__":
     app.scheduler = AsyncIOScheduler()
     app.scheduler.start()
     app.users_mailboxes = defaultdict(lambda: None)
+    app.email_update_jobs = {}
     upload_users_active_mailboxes(app)
     app.futures = {}    # персонализировать!
     app.commands = commands
